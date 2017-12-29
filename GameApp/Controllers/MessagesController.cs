@@ -14,50 +14,57 @@ namespace GameApp
     {
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
-            if(activity.Type == ActivityTypes.Message)
+            if (activity.Type == ActivityTypes.Message)
             {
                 var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
-                var game = new Game();
+                string message = await GetMessage(connector, activity);
 
-                string message = game.Play(activity.Text);
-
-                Activity reply = activity.CreateReply(message);
+                Activity reply = activity.BuildMessageActivity(message);
 
                 await connector.Conversations.ReplyToActivityAsync(reply);
             }
-            else
-            {
-                HandleSystemMessage(activity);
-            }
-            var response = Request.CreateResponse(HttpStatusCode.OK);
+
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
             return response;
         }
 
-        private Activity HandleSystemMessage(Activity message)
+        async Task<string> GetMessage(ConnectorClient connector, Activity activity)
         {
-            if(message.Type == ActivityTypes.DeleteUserData)
+            var state = new GameState();
+
+            string userText = activity.Text.ToLower();
+            string message = string.Empty;
+
+            if (userText.Contains(value: "score"))
             {
-
+                message = await state.GetScoresAsync(activity);
             }
-            else if(message.Type == ActivityTypes.ConversationUpdate)
+            else if (userText.Contains(value: "delete"))
             {
-
+                message = await state.DeleteScoresAsync(activity);
             }
-            else if(message.Type == ActivityTypes.ContactRelationUpdate)
+            else
             {
+                var game = new Game();
+                message = game.Play(userText);
 
+                bool isValidInput = !message.StartsWith("Type");
+                if (isValidInput)
+                {
+                    if (message.Contains(value: "Tie"))
+                    {
+                        await state.AddTieAsync(activity);
+                    }
+                    else
+                    {
+                        bool userWin = message.Contains(value: "win");
+                        await state.UpdateScoresAsync(activity, userWin);
+                    }
+                }
             }
-            else if(message.Type == ActivityTypes.Typing)
-            {
 
-            }
-            else if(message.Type == ActivityTypes.Ping)
-            {
-
-            }
-
-            return null;
+            return message;
         }
     }
 }
