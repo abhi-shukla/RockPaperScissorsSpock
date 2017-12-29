@@ -9,6 +9,8 @@ namespace GameApp.Models
     {
         Rock,
         Paper,
-        Scissors
+        Scissors,
+        Lizard,
+        Spock
     }
 }
