@@ -1,7 +1,9 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using GameApp.Models;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 
@@ -14,7 +16,15 @@ namespace GameApp
         {
             if(activity.Type == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+                var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+
+                var game = new Game();
+
+                string message = game.Play(activity.Text);
+
+                Activity reply = activity.CreateReply(message);
+
+                await connector.Conversations.ReplyToActivityAsync(reply);
             }
             else
             {
