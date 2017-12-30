@@ -115,6 +115,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\GameApp20171229092825 - Web Deploy.pubxml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="default.htm" />
