@@ -36,5 +36,33 @@ namespace GameApp.Models
 
             return (Activity)replyActivity;
         }
+                           
+        public static Activity BuildTypingActivity(this Activity userActivity)
+        {
+            ITypingActivity replyActivity = Activity.CreateTypingActivity();
+
+            replyActivity.ReplyToId = userActivity.Id;
+
+            replyActivity.From = new ChannelAccount
+            {
+                Id = userActivity.Recipient.Id,
+                Name = userActivity.Recipient.Name
+            };
+
+            replyActivity.Recipient = new ChannelAccount
+            {
+                Id = userActivity.From.Id,
+                Name = userActivity.From.Name
+            };
+
+            replyActivity.Conversation = new ConversationAccount
+            {
+                Id = userActivity.Conversation.Id,
+                Name = userActivity.Conversation.Name,
+                IsGroup = userActivity.Conversation.IsGroup
+            };
+
+            return (Activity)replyActivity;
+        }
     }
 }

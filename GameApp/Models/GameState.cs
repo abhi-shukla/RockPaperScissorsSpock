@@ -16,8 +16,12 @@ namespace GameApp.Models
             public bool UserWin { get; set; }
         }
 
-        public async Task<string> GetScoresAsync(Activity activity)
+        public async Task<string> GetScoresAsync(ConnectorClient connector, Activity activity)
         {
+            Activity typingActivity = activity.BuildTypingActivity();
+            await connector.Conversations.ReplyToActivityAsync(typingActivity);
+            await Task.Delay(millisecondsDelay: 5000);
+
             using (StateClient stateClient = activity.GetStateClient())
             {
                 IBotState chatbotState = stateClient.BotState;

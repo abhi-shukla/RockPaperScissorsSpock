@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using GameApp.Models;
 using Microsoft.Bot.Builder.Dialogs;
@@ -14,18 +15,31 @@ namespace GameApp
     {
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+            HttpStatusCode statusCode = HttpStatusCode.OK;
+
+            var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+
             if (activity.Type == ActivityTypes.Message)
             {
-                var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-
                 string message = await GetMessage(connector, activity);
 
                 Activity reply = activity.BuildMessageActivity(message);
 
                 await connector.Conversations.ReplyToActivityAsync(reply);
             }
+            else
+            {
+                try
+                {
+                    await new SystemMessages().Handle(connector, activity);
+                }
+                catch(HttpException ex)
+                {
+                    statusCode = (HttpStatusCode) ex.GetHttpCode();
+                }
+            }
 
-            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.OK);
+            HttpResponseMessage response = Request.CreateResponse(statusCode);
             return response;
         }
 
@@ -38,7 +52,7 @@ namespace GameApp
 
             if (userText.Contains(value: "score"))
             {
-                message = await state.GetScoresAsync(activity);
+                message = await state.GetScoresAsync(connector, activity);
             }
             else if (userText.Contains(value: "delete"))
             {
