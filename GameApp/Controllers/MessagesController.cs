@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -6,7 +7,9 @@ using System.Web;
 using System.Web.Http;
 using GameApp.Models;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.ConnectorEx;
 using Microsoft.Bot.Connector;
+using Newtonsoft.Json;
 
 namespace GameApp
 {
@@ -22,10 +25,10 @@ namespace GameApp
             if (activity.Type == ActivityTypes.Message)
             {
                 string message = await GetMessage(connector, activity);
-
                 Activity reply = activity.BuildMessageActivity(message);
-
                 await connector.Conversations.ReplyToActivityAsync(reply);
+
+                SaveActivity(activity);
             }
             else
             {
@@ -41,6 +44,14 @@ namespace GameApp
 
             HttpResponseMessage response = Request.CreateResponse(statusCode);
             return response;
+        }
+
+        void SaveActivity(Activity activity)
+        {
+            ConversationReference convRef = activity.ToConversationReference();
+            string convRefJson = JsonConvert.SerializeObject(convRef);
+            string path = HttpContext.Current.Server.MapPath(@"..\ConversationReference.json");
+            File.WriteAllText(path, convRefJson);
         }
 
         async Task<string> GetMessage(ConnectorClient connector, Activity activity)
